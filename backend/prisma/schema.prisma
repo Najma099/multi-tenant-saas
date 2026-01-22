@@ -1,0 +1,130 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id        Int        @id @default(autoincrement())
+  name      String
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  users      User[]
+  workspaces Workspace[]
+
+  @@map("tenant")
+}
+
+model User {
+  id        Int    @id @default(autoincrement())
+  tenantId  Int    @map("tenant_id")
+  email     String 
+  name      String
+  password  String
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant            Tenant            @relation(fields: [tenantId], references: [id])
+  workspaceMembers  WorkspaceMember[]
+  createdPages      Page[]
+
+  @@unique([tenantId, email])  
+  @@map("user")
+}
+
+model Workspace {
+  id        Int      @id @default(autoincrement())
+  tenantId  Int      @map("tenant_id")
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant   Tenant            @relation(fields: [tenantId], references: [id])
+  members  WorkspaceMember[]
+  pages    Page[]
+
+  @@map("workspace")
+}
+
+model WorkspaceMember {
+  id          Int      @id @default(autoincrement())
+  tenantId    Int      @map("tenant_id") 
+  workspaceId Int      @map("workspace_id")
+  userId      Int      @map("user_id")
+  role        RoleType
+  joinedAt    DateTime @default(now()) @map("joined_at")
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@unique([workspaceId, userId]) 
+  @@map("workspace_member")
+}
+
+model Page {
+  id           Int       @id @default(autoincrement())
+  tenantId     Int       @map("tenant_id")
+  workspaceId  Int       @map("workspace_id")
+  parentPageId Int?      @map("parent_page_id")
+  title        String
+  createdBy    Int       @map("created_by")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant      Tenant  @relation(fields: [tenantId], references: [id])
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  creator     User    @relation(fields: [createdBy], references: [id])
+  parentPage  Page?   @relation("PageHierarchy", fields: [parentPageId], references: [id])
+  childPages  Page[]  @relation("PageHierarchy")
+  blocks      Block[]
+
+  @@index([tenantId])
+  @@index([workspaceId])
+  @@map("page")
+}
+
+enum RoleType {
+  ADMIN
+  VIEWER
+  EDITOR
+}
+
+enum BlockType {
+  TODO
+  PARAGRAPH
+  IMAGE
+  CODE
+  HEADING_1
+  HEADING_2
+}
+
+model Block {
+  id       Int       @id @default(autoincrement())
+  tenantId  Int       @map("tenant_id")
+  pageId   Int       @map("page_id")
+  type     BlockType
+  position Int
+  content  Json
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  page Page @relation(fields: [pageId], references: [id])
+
+  @@index([tenantId])
+  @@index([pageId])
+  @@map("block")
+}
