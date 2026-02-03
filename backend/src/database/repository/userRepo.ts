@@ -2,8 +2,7 @@ import { getPrismaClient } from "../index";
 import { AuthUserWithPassword } from "../../types/user";
 
 export async function findByEmail(email: string): Promise<AuthUserWithPassword | null> {
-  const prisma = getPrismaClient();
-
+  const prisma = getPrismaClient(); 
   const user = await prisma.user.findUnique({
     where: { email },
   });
@@ -26,5 +25,20 @@ export async function existsByEmail(email: string): Promise<boolean> {
   });
   return !!user;
 }
+
+
+export async function findById(id: number) {
+  const prisma = getPrismaClient();
+  return prisma.user.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      createdAt: true,
+    },
+  });
+}
+
 
 

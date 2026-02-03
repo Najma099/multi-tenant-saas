@@ -28,6 +28,8 @@ export const getRefreshedToken = (req: { body?: { refreshToken?: string } }): st
 export const validateAccessToken = (payload: AccessTokenPayload): boolean => {
   if (
     !payload ||
+    !payload.prm ||
+    !payload.sub ||
     payload.iss !== tokenInfo.issuer ||
     payload.aud !== tokenInfo.audience ||
     !/^\d+$/.test(payload.sub)
@@ -41,6 +43,8 @@ export const validateAccessToken = (payload: AccessTokenPayload): boolean => {
 export const validateRefreshToken = (payload: RefreshTokenPayload): boolean => {
   if (
     !payload ||
+    !payload.prm ||
+    !payload.sub ||
     payload.iss !== tokenInfo.issuer ||
     payload.aud !== tokenInfo.audience ||
     !/^\d+$/.test(payload.sub)
@@ -57,30 +61,29 @@ export const createTokens = async (userId: number) => {
 
   await KeystoreRepo.create(userId, accessTokenKey, refreshTokenKey);
 
-  const accessToken = await JWT.encode(
-    new AccessTokenPayload(
+  const accessToken = await JWT.encode({
+    ...new AccessTokenPayload(
       tokenInfo.issuer,
       tokenInfo.audience,
       userId,
       accessTokenKey,
-      tokenInfo.accessTokenValidity,
-    ),
-    {},
-  );
+      tokenInfo.accessTokenValidity
+    )
+  });
 
-  const refreshToken = await JWT.encode(
-    new RefreshTokenPayload(
+  const refreshToken = await JWT.encode({
+    ...new RefreshTokenPayload(
       tokenInfo.issuer,
       tokenInfo.audience,
       userId,
       refreshTokenKey,
-      tokenInfo.refreshTokenValidity,
-    ),
-    {},
-  );
+      tokenInfo.refreshTokenValidity
+    )
+  });
 
   return { accessToken, refreshToken };
 };
+
 
 // Verify password
 export const isPasswordCorrect = async (userPassword: string, hashedPassword: string) => {

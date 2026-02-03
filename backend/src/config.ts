@@ -1,10 +1,9 @@
 import dotenv from 'dotenv'
-import { CookieOptions } from 'express';
-
 dotenv.config();
 
-export const originalUrl = process.env.ORIGINAL_URL;
+export const originUrl = process.env.ORIGIN_URL;
 export const isProduction = process.env.NODE_ENV === 'production';
+export const port = process.env.PORT;
 
 export const tokenInfo = {
   accessTokenValidity: parseInt(process.env.ACCESS_TOKEN_VALIDITY_SEC || '0'),

@@ -11,17 +11,16 @@ import { getPrismaClient } from '../../database';
 import bcryptjs from 'bcryptjs';
 
 const router = Router();
-const prisma = getPrismaClient();
 router.post(
     '/',
     validateRequest(SignupSchema),
     asyncHandler(async (req, res) => {     
         const { name, email, password} = req.body;
         const emailExists = await existsByEmail(email);
-        if(emailExists) throw new BadRequestError('User already registered.');
+        if(emailExists) throw new BadRequestError('Email already registered.');
 
         const hashedPassword = await bcryptjs.hash(password, 12);
-
+        const prisma = getPrismaClient();
         const user = await prisma.user.create({
             data: {
                 name,

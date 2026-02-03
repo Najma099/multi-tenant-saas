@@ -19,8 +19,7 @@ router.post(
     if (!refreshToken) {
       throw new AuthFailureError('Refresh token missing');
     }
-
-    
+  
     const payload = (await JWT.validate(refreshToken)) as RefreshTokenPayload;
 
     const userId = Number(payload.sub);
@@ -28,7 +27,6 @@ router.post(
       throw new AuthFailureError('Invalid refresh token');
     }
 
-   
     const keystore = await KeystoreRepo.find(
       userId,
       payload.prm, 
@@ -37,8 +35,7 @@ router.post(
     if (!keystore) {
       throw new AuthFailureError('Refresh token revoked');
     }
-
-    
+ 
     await KeystoreRepo.remove(keystore.id);
     const tokens = await createTokens(userId);
 

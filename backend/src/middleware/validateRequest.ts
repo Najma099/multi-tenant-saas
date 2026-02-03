@@ -4,7 +4,7 @@ import { AuthFailureError } from '../core/ApiError';
 
 export function validateRequest<T extends ZodSchema>(
   schema: T,
-  property: 'body' | 'query' | 'params' = 'body'
+  property: 'body' | 'query' | 'params'| 'headers'= 'body'
 ) {
   return (req: Request, _res: Response, next: NextFunction) => {
     const parsed = schema.safeParse(req[property]);
