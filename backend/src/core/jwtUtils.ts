@@ -61,11 +61,11 @@ async function readPrivateKey(): Promise<string> {
     return tokenInfo.jwtPrivateKey;
 }
 
-async function encode<T extends object>(p0: RefreshTokenPayload, payload: T): Promise<string> {
+async function encode<T extends object>(payload: T): Promise<string> {
     const cert = await readPrivateKey();
     if (!cert) throw new InternalError('Token generation failure');
     //@ts-expect-error cert is valid
-    return promisify(sign)({ ...payload }, cert, { algorithm: 'RS256' });
+    return promisify(sign)(payload, cert, { algorithm: 'RS256' });
 }
 
 /**
@@ -80,7 +80,6 @@ async function validate<T extends object>(token: string) {
         if (e instanceof JwtTokenExpiredError) {
             throw new TokenExpiredError();
         }
-        // throws error if the token has not been encrypted by the private key
         throw new BadTokenError();
     }
 }
