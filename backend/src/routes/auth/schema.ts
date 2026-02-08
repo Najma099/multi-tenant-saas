@@ -17,3 +17,7 @@ export const AuthHeaderSchema = z.object({
     .startsWith('Bearer ')
     .min(10, 'Invalid Authorization header'),
 });
+
+export type AuthSchema = {
+  SignUpSchema: z.infer<typeof SignupSchema>;
+}

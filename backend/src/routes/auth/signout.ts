@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { asyncHandler } from '../../core/asyncHandler';
 import { AuthFailureError } from '../../core/ApiError';
 import JWT from '../../core/jwtUtils';
-import * as KeystoreRepo from '../../database/repository/keystoreRepo';
+import * as KeystoreRepo from '../../database/repository/keystore.repo';
 import { getAccessToken } from '../../core/authUtils';
 import { SuccessMsgResponse } from '../../core/ApiResponse';
 import { ProtectedRequest } from '../../types/app-requests';

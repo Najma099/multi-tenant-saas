@@ -3,8 +3,8 @@ import { asyncHandler } from '../../core/asyncHandler';
 import { AuthFailureError, AccessTokenError } from '../../core/ApiError';
 import JWT, { AccessTokenPayload } from '../../core/jwtUtils';
 import { getAccessToken, validateAccessToken } from '../../core/authUtils';
-import * as UserRepo from '../../database/repository/userRepo';
-import * as KeystoreRepo from '../../database/repository/keystoreRepo';
+import * as UserRepo from '../../database/repository/user.repo';
+import * as KeystoreRepo from '../../database/repository/keystore.repo';
 import { TokenExpiredError } from 'jsonwebtoken';
 import { ProtectedRequest } from '../../types/app-requests';
 import { AuthHeaderSchema } from './schema';
@@ -30,8 +30,7 @@ export default router.use(
       if (!user) {
         throw new AuthFailureError('User not registered');
       }
-      console.log(payload);
-      console.log(user.id);
+     
       const keystore = await KeystoreRepo.find(
         user.id,
         payload.prm,
@@ -43,7 +42,6 @@ export default router.use(
 
       req.user = user;
       req.keystore = keystore;
-
       return next();
     } catch (e) {
       if (e instanceof TokenExpiredError) {

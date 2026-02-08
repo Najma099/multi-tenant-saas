@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { asyncHandler } from '../../core/asyncHandler';
 import { SigninSchema } from './schema'
-import { AuthFailureError, BadRequestError } from '../../core/ApiError';
-import { findByEmail } from '../../database/repository/userRepo';
+import { BadRequestError } from '../../core/ApiError';
+import { findByEmail } from '../../database/repository/user.repo';
 import { createTokens, isPasswordCorrect } from '../../core/authUtils';
 import { SuccessResponse } from '../../core/ApiResponse';
 import { getUserData } from '../../core/utils';
@@ -18,7 +18,7 @@ router.post(
        if(!user) throw new BadRequestError('User not registered.');
 
         const isValid = await isPasswordCorrect(password, user.password);
-        if(!isValid) throw new AuthFailureError('Authentication failure');
+        if(!isValid) throw new BadRequestError('Invalid credential.');
 
         const tokens = await createTokens(user.id);
         const userData = getUserData(user);

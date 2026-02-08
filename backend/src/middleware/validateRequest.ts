@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodSchema } from 'zod';
-import { AuthFailureError } from '../core/ApiError';
+import { BadRequestError } from '../core/ApiError';
 
 export function validateRequest<T extends ZodSchema>(
   schema: T,
@@ -10,7 +10,7 @@ export function validateRequest<T extends ZodSchema>(
     const parsed = schema.safeParse(req[property]);
     if (!parsed.success) {
       return next(
-        new AuthFailureError(
+        new BadRequestError(
           parsed.error.issues.map(i => i.message).join(', ')
         )
       );

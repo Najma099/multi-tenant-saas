@@ -5,10 +5,10 @@ import { SuccessResponse } from '../../core/ApiResponse';
 
 import JWT from '../../core/jwtUtils';
 import { createTokens } from '../../core/authUtils';
-import * as KeystoreRepo from '../../database/repository/keystoreRepo';
+import * as KeystoreRepo from '../../database/repository/keystore.repo';
 import { RefreshTokenPayload } from '../../core/jwtUtils';
 import { getAccessToken, validateRefreshToken } from "../../core/authUtils";
-import * as UserRepo from "../../database/repository/userRepo";
+import * as UserRepo from "../../database/repository/user.repo";
 
 const router = Router();
 

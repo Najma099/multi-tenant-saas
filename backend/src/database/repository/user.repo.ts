@@ -1,8 +1,10 @@
-import { getPrismaClient } from "../index";
+import { prisma } from "..";
+import { AuthSchema } from "../../routes/auth/schema";
 import { AuthUserWithPassword } from "../../types/user";
+import { createWorkspace } from "./workspace.repo";
+
 
 export async function findByEmail(email: string): Promise<AuthUserWithPassword | null> {
-  const prisma = getPrismaClient(); 
   const user = await prisma.user.findUnique({
     where: { email },
   });
@@ -18,7 +20,6 @@ export async function findByEmail(email: string): Promise<AuthUserWithPassword |
 }
 
 export async function existsByEmail(email: string): Promise<boolean> {
-  const prisma = getPrismaClient();
   const user = await prisma.user.findUnique({
     where: { email },
     select: { id: true },
@@ -28,7 +29,6 @@ export async function existsByEmail(email: string): Promise<boolean> {
 
 
 export async function findById(id: number) {
-  const prisma = getPrismaClient();
   return prisma.user.findUnique({
     where: { id },
     select: {
@@ -40,5 +40,11 @@ export async function findById(id: number) {
   });
 }
 
-
+export async function createUser(data: AuthSchema['SignUpSchema']) {
+  return prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({ data });
+    await createWorkspace(tx, user.id, `${data.name}'s workspace`);
+    return user;
+  })
+}
 

@@ -1,7 +1,5 @@
 import { app } from './app';
-import { connectDB } from './database/index';
 import { port } from './config';
-
 
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
@@ -15,9 +13,6 @@ process.on('unhandledRejection', (reason, promise) => {
 
 async function start() {
   try {
-    await connectDB();
-    console.log('Database connected');
-
     app.listen(port, () => {
       console.log(`Server running on port: ${port}`);
     });

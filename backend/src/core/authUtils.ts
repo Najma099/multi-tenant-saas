@@ -1,11 +1,9 @@
 import { AuthFailureError, InternalError } from './ApiError';
-import { Tokens } from '../types/app-requests';
 import JWT, { AccessTokenPayload, RefreshTokenPayload } from './jwtUtils';
 import { tokenInfo } from './../config';
 import bcrypt from 'bcryptjs';
-import { User } from '@prisma/client';
 import crypto from 'crypto';
-import * as KeystoreRepo from '../database/repository/keystoreRepo';
+import * as KeystoreRepo from '../database/repository/keystore.repo';
 
 // Get access token from Authorization header only
 export const getAccessToken = (req: { headers: { authorization?: string } }): string => {

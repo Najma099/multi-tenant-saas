@@ -1,11 +1,10 @@
-import { getPrismaClient } from '../index';
+import { prisma } from "..";
 
 export async function create(
   userId: number,
   primaryKey: string,
   secondaryKey: string,
 ) {
-  const prisma = getPrismaClient();
   return prisma.keystore.create({
     data: {
       clientId: userId,
@@ -20,7 +19,6 @@ export async function find(
   primaryKey: string,
   secondaryKey?: string,
 ) {
-  const prisma = getPrismaClient();
   return prisma.keystore.findFirst({
     where: {
       clientId: userId,
@@ -35,7 +33,6 @@ export async function findByRefreshKey(
   userId: number,
   refreshKey: string,
 ) {
-  const prisma = getPrismaClient();
   return prisma.keystore.findFirst({
     where: {
       user: {
@@ -48,6 +45,5 @@ export async function findByRefreshKey(
 
 
 export async function remove(id: number) {
-  const prisma = getPrismaClient();
   return prisma.keystore.delete({ where: { id } });
 }
