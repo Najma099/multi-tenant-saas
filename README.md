@@ -25,7 +25,6 @@ No Firebase. No Auth0. No Socket.io. Just raw WebSockets, custom auth, and a han
 | Auth | JWT + Refresh Token Rotation |
 | Infra | Vercel (frontend), Render (backend) |
 
----
 
 ## Architecture
 
@@ -57,6 +56,10 @@ Updates flow: `Client → WebSocket → Server Memory → Redis → Worker → P
 
 This keeps latency low, writes batched, and the database load minimal.
 
+
+<img width="276" height="459" alt="Screenshot 2026-02-26 at 11 05 06" src="https://github.com/user-attachments/assets/2fa0c8ff-7c79-48d2-890b-21a5fe25c153" />
+<img width="607" height="261" alt="Screenshot 2026-02-26 at 10 48 49" src="https://github.com/user-attachments/assets/18566813-ea94-4a26-9900-57d9c1d67c8a" />
+
 ---
 
 ## Features
@@ -82,8 +85,10 @@ Workspace
         └── Subpage
 ```
 
-### Secure Authentication
-Short-lived JWT access tokens paired with refresh token rotation. Each refresh token is stored as an independent row in a Keystore table, enabling per-session revocation without invalidating other active sessions.
+<img width="1466" height="827" alt="Screenshot 2026-02-26 at 10 55 29" src="https://github.com/user-attachments/assets/8c1132c2-e530-4be0-842b-d61f05c19779" />
+
+<img width="1470" height="796" alt="Screenshot 2026-02-26 at 10 54 18" src="https://github.com/user-attachments/assets/dd8a325c-babf-4fb3-8fb5-82f2b5a65c87" />
+
 
 ### Optimistic UI
 Client edits are applied instantly. If the server rejects an update, the UI reconciles automatically — keeping the editing experience fast and responsive.
@@ -148,4 +153,5 @@ npm run dev
 
 ## Why Build This?
 
-Most collaborative apps delegate the hard parts to managed services. Zotion was built to peel back those abstractions and implement the real infrastructure directly — auth, multi-tenancy, CRDT sync, and persistence pipeline — to understand how it actually works.
+**MVP complete — actively iterating.** The core workspace, collaboration, and content editing experience is functional and deployed. Focus now is on polish and consistency before the next round of features.
+
