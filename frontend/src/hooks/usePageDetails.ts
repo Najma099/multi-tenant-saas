@@ -12,18 +12,17 @@ export function usePageDetail(pageId: number) {
   const { activeWorkspace } = useWorkspace();
 
   const refetchPage = useCallback(async () => {
-    if (!pageId || !activeWorkspace) return; 
+    if (!pageId || !activeWorkspace) return;
 
     try {
       setLoading(true);
       const data = await fetchPageById(activeWorkspace.id, pageId);
       setPage(data);
     } catch (err) {
-      console.error("Failed to load page", err);
     } finally {
       setLoading(false);
     }
-  }, [pageId, activeWorkspace]); 
+  }, [pageId, activeWorkspace]);
 
   useEffect(() => {
     refetchPage();

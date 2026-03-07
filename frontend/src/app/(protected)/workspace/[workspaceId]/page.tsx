@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import { useEffect } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function WorkspacePage() {
   const params = useParams();
@@ -18,12 +19,9 @@ export default function WorkspacePage() {
 
   if (!activeWorkspace) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
-            Loading workspace...
-          </h1>
-        </div>
+      <div className="flex flex-col items-center justify-center h-screen space-y-4">
+        <Skeleton className="h-10 w-80" />
+        <Skeleton className="h-4 w-80" />
       </div>
     );
   }

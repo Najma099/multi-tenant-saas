@@ -1,8 +1,9 @@
 import { Toaster } from "sonner";
 import type { Metadata } from "next";
-import { AuthProvider } from '@/context/AuthContext'; 
+import { AuthProvider } from '@/context/AuthContext';
 import { WorkspaceProvider } from '@/context/WorkspaceContext';
 import { ThemeProvider } from "@/components/ui/theme-provider";
+import ServerPing from "@/components/ServerPing";
 import './globals.css';
 
 
@@ -38,13 +39,14 @@ export default function RootLayout({
         <AuthProvider>
           <WorkspaceProvider>
             <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-          </ThemeProvider>
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              {children}
+              <ServerPing />
+            </ThemeProvider>
           </WorkspaceProvider>
         </AuthProvider>
         <Toaster position="bottom-right" richColors />

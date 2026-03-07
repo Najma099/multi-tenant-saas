@@ -12,13 +12,13 @@ const router = Router();
 router.post(
     '/',
     validateRequest(SigninSchema),
-    asyncHandler(async (req, res) => {     
-       const { email, password} = req.body;
-       const user = await findByEmail(email);
-       if(!user) throw new BadRequestError('User not registered.');
+    asyncHandler(async (req, res) => {
+        const { email, password } = req.body;
+        const user = await findByEmail(email);
+        if (!user) throw new BadRequestError('User not registered.');
 
         const isValid = await isPasswordCorrect(password, user.password);
-        if(!isValid) throw new BadRequestError('Invalid credential.');
+        if (!isValid) throw new BadRequestError('Invalid credential.');
 
         const tokens = await createTokens(user.id);
         const userData = getUserData(user);
@@ -28,11 +28,6 @@ router.post(
             tokens: tokens,
         };
 
-        console.log("==== BACKEND RESPONSE ====");
-        console.log(responsePayload);
-        console.log("Type of user:", typeof responsePayload.user);
-        console.log("Type of tokens:", typeof responsePayload.tokens);
-        console.log("==========================");
         new SuccessResponse('Login success.', {
             user: userData,
             tokens: tokens,

@@ -3,18 +3,13 @@ import { asyncHandler } from "../core/asyncHandler";
 import { prisma } from "../database";
 import { ProtectedRequest } from "../types/app-requests";
 
-export const isWorkspaceMember = asyncHandler(async(req: ProtectedRequest, res, next) => {
-    console.log("isWorkspaceMember hit", req.originalUrl);
+export const isWorkspaceMember = asyncHandler(async (req: ProtectedRequest, res, next) => {
     const workspaceId = Number(req.params.workspaceId);
     const userId = req.user.id;
-
-    console.log("workspaceId",workspaceId);
-    console.log( req.params);
 
     if (isNaN(workspaceId)) {
         throw new BadRequestError("Invalid Workspace ID in request");
     }
-
 
     // const workspace = await prisma.workspace.findUnique({
     //     where: { id: workspaceId }
@@ -33,7 +28,7 @@ export const isWorkspaceMember = asyncHandler(async(req: ProtectedRequest, res, 
         }
     });
 
-    if(!membership) throw new ForbiddenError("You do not belong to this workspace");
+    if (!membership) throw new ForbiddenError("You do not belong to this workspace");
     req.workspaceId = workspaceId;
     req.userRole = membership.role;
     next();

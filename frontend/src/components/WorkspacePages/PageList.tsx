@@ -9,7 +9,8 @@ import { useWorkspace } from "@/context/WorkspaceContext";
 import { toast } from "sonner";
 import { MoreHorizontal, Pencil, Trash, FileText } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { Spinner} from "@/components/ui/Spinner";
+import { Spinner } from "@/components/ui/Spinner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function PagesList({
   pages,
@@ -29,7 +30,7 @@ export default function PagesList({
   const [title, setTitle] = useState("");
 
   const pageIdFromUrl = params.pageId;
-  const workspaceId = activeWorkspace?.id; 
+  const workspaceId = activeWorkspace?.id;
 
   const handleRename = async (pageId: number) => {
     if (!activeWorkspace || !title.trim()) return;
@@ -62,7 +63,16 @@ export default function PagesList({
     }
   };
 
-  if (loading) return <div className="p-2 text-sm animate-pulse text-zinc-500">Loading pages...</div>;
+  if (loading) {
+    return (
+      <div className="space-y-3 p-2">
+        <Skeleton className="h-4 w-[85%]" />
+        <Skeleton className="h-4 w-[85%]" />
+        <Skeleton className="h-4 w-[85%]" />
+        <Skeleton className="h-4 w-[85%]" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-0.5">
@@ -73,13 +83,12 @@ export default function PagesList({
 
         return (
           <div key={page.id} className="relative group">
-            <Link 
+            <Link
               href={`/workspace/${workspaceId}/pages/${page.id}`}
-              className={`flex items-center justify-between px-2 py-1 rounded-md text-sm transition-colors ${
-                isActive 
-                  ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100" 
-                  : "hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-600 dark:text-zinc-400"
-              } ${isMenuOpen ? "bg-zinc-100 dark:bg-zinc-800" : ""}`}
+              className={`flex items-center justify-between px-2 py-1 rounded-md text-sm transition-colors ${isActive
+                ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
+                : "hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-600 dark:text-zinc-400"
+                } ${isMenuOpen ? "bg-zinc-100 dark:bg-zinc-800" : ""}`}
             >
               <div className="flex items-center flex-1 truncate mr-2 gap-2">
                 <div className="shrink-0 w-4 h-4 flex items-center justify-center">
@@ -95,13 +104,13 @@ export default function PagesList({
                     <input
                       autoFocus
                       value={title}
-                      onClick={(e) => e.preventDefault()} 
+                      onClick={(e) => e.preventDefault()}
                       onChange={(e) => setTitle(e.target.value)}
                       onBlur={() => setEditingPageId(null)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
-                           e.preventDefault();
-                           handleRename(page.id);
+                          e.preventDefault();
+                          handleRename(page.id);
                         }
                         if (e.key === "Escape") setEditingPageId(null);
                       }}
@@ -120,12 +129,11 @@ export default function PagesList({
             <div className="absolute right-1 top-1/2 -translate-y-1/2">
               <DropdownMenu.Root onOpenChange={(open) => setOpenMenuId(open ? page.id : null)}>
                 <DropdownMenu.Trigger asChild>
-                  <button 
+                  <button
                     disabled={isProcessing}
                     onClick={(e) => e.preventDefault()}
-                    className={`p-1 hover:bg-zinc-300 dark:hover:bg-zinc-700 rounded transition-opacity outline-none ${
-                      isMenuOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                    }`}
+                    className={`p-1 hover:bg-zinc-300 dark:hover:bg-zinc-700 rounded transition-opacity outline-none ${isMenuOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                      }`}
                   >
                     <MoreHorizontal size={14} className="text-zinc-500" />
                   </button>

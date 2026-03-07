@@ -5,7 +5,7 @@ import { fetchBlock } from "@/lib/block.api";
 import { Block } from "@/types/block.type";
 
 export function useBlocks(pageId?: number) {
-  const [blocks, setBlocks] = useState<Block[]>([]); 
+  const [blocks, setBlocks] = useState<Block[]>([]);
   const [loading, setLoading] = useState(false);
 
   const loadBlocks = useCallback(async () => {
@@ -14,9 +14,8 @@ export function useBlocks(pageId?: number) {
     try {
       setLoading(true);
       const data = await fetchBlock(pageId);
-      setBlocks(data); 
+      setBlocks(data);
     } catch (e) {
-      console.error("Failed to load blocks", e);
     } finally {
       setLoading(false);
     }
@@ -27,7 +26,7 @@ export function useBlocks(pageId?: number) {
   }, [loadBlocks]);
 
   const optimisticUpdateBlock = useCallback((blockId: number, updates: Partial<Block>) => {
-    setBlocks(prev => prev.map(block => 
+    setBlocks(prev => prev.map(block =>
       block.id === blockId ? { ...block, ...updates } : block
     ));
   }, []);

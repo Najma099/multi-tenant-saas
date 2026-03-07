@@ -53,7 +53,6 @@ import { useContext } from "react";
 //         apiClient.startTokenRefreshTimer();
 //       }
 //     } catch (err) {
-//       console.error("Auth check failed", err);
 //       toast.error("Please login again.");
 //       setUser(null);
 //     } finally {

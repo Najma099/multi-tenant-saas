@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/Spinner";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import AuthModal from "@/components/AuthModel";
 
@@ -27,7 +27,7 @@ export const Heading = () => {
 
         {loading && (
           <div className="flex w-full items-center justify-center">
-            <Spinner className="h-6 w-6" />
+            <Skeleton className="h-10 w-36 rounded-md" />
           </div>
         )}
 

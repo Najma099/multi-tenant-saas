@@ -31,27 +31,24 @@ export default function WorkspaceItem({
     showOwner = false,
     user
 }: WorkspaceItemProps) {
-    console.log(user);
-    console.log(workspace.owner);
-    
+    const isOwner = user?.id === workspace.owner.id;
+
     return (
         <div className="relative group/item">
             <DropdownMenuItem
                 onSelect={() =>
                     !isProcessing && handleWorkspaceSwitch(workspace)
                 }
-                className={`flex items-center gap-2 p-2 cursor-pointer rounded-md transition-all ${
-                    isActive
+                className={`flex items-center gap-2 p-2 cursor-pointer rounded-md transition-all ${isActive
                         ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-medium'
                         : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900'
-                }`}
+                    }`}
             >
                 <div
-                    className={`w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold border transition-colors ${
-                        isActive
+                    className={`w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold border transition-colors ${isActive
                             ? 'bg-white dark:bg-zinc-700 border-zinc-300 text-zinc-900'
                             : 'bg-zinc-100 dark:bg-zinc-800 border-transparent'
-                    }`}
+                        }`}
                 >
                     {isProcessing ? (
                         <Loader2 size={10} className="animate-spin" />
@@ -69,8 +66,8 @@ export default function WorkspaceItem({
                                 ? workspace.owner?.id === user?.id
                                     ? ' by you'
                                     : workspace.owner?.name
-                                      ? ` by ${workspace.owner.name}`
-                                      : ''
+                                        ? ` by ${workspace.owner.name}`
+                                        : ''
                                 : ''}
                             )
                         </span>

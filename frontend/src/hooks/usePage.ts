@@ -22,7 +22,6 @@ export function usePage() {
       const data = await fetchPageByWorkspace(activeWorkspace.id);
       setPages(data);
     } catch (err) {
-      console.error("Failed to load pages", err);
     } finally {
       setLoading(false);
     }

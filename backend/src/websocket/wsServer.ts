@@ -10,7 +10,8 @@ import {
 } from "./room";
 import { handleMessage } from "./wsHandler";
 import JWT, { AccessTokenPayload } from "../core/jwtUtils";
-import {validateAccessToken}  from "../core/authUtils"; 
+import { validateAccessToken } from "../core/authUtils";
+import { encodeDocumentState, destroyDocumentIfEmpty } from "./yjsManager";
 
 interface JoinMessage {
   type: "join";
@@ -22,7 +23,7 @@ interface JoinMessage {
   token: string;
 }
 
-export async function initWsServer(httpServer: Server):Promise<void> {
+export async function initWsServer(httpServer: Server): Promise<void> {
   const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
 
   wss.on("connection", (ws: WebSocket, _req: IncomingMessage) => {
@@ -44,20 +45,19 @@ export async function initWsServer(httpServer: Server):Promise<void> {
             return;
           }
 
-            let decoded: AccessTokenPayload;
-            try {
+          let decoded: AccessTokenPayload;
+          try {
             decoded = await JWT.validate(msg.token) as unknown as AccessTokenPayload;
             validateAccessToken(decoded);
-            } catch(err) {
-               console.error("WS auth error:", err);
+          } catch (err) {
             ws.close(4003, "Unauthorized");
             return;
-            }
+          }
 
-            if (decoded.sub !== msg.userId) {
+          if (decoded.sub !== msg.userId) {
             ws.close(4003, "Unauthorized");
             return;
-            }
+          }
 
           clearTimeout(joinTimeout);
 
@@ -80,7 +80,8 @@ export async function initWsServer(httpServer: Server):Promise<void> {
             color: client.color,
           }, client);
 
-          console.log(`WS: ${client.name} [tab:${client.tabId}] joined page ${client.pageId}`);
+          const stateBase64 = await encodeDocumentState(msg.pageId);
+          ws.send(JSON.stringify({ type: "yjs_init", state: stateBase64 }));
         } catch {
           ws.close(4000, "Invalid join message");
         }
@@ -96,20 +97,14 @@ export async function initWsServer(httpServer: Server):Promise<void> {
       const wasLastTab = leaveRoom(client.pageId, client);
 
       if (wasLastTab) {
+        destroyDocumentIfEmpty(client.pageId);
         broadcastToRoom(client.pageId, {
           type: "user_left",
           userId: client.userId,
         });
-        console.log(`WS: ${client.name} fully left page ${client.pageId}`);
-      } else {
-        console.log(`WS: ${client.name} closed tab ${client.tabId} (still has other tabs)`);
       }
     });
 
-    ws.on("error", (err) => {
-      console.error("WS error:", err.message);
-    });
+    ws.on("error", () => { });
   });
-
-  console.log("WebSocket server initialized on /ws");
 }

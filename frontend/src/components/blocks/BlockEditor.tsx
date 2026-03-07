@@ -14,8 +14,6 @@ import { toast } from "sonner";
 import { useWebSocket } from "@/hooks/useWebsockets";
 import { useCursor } from "@/hooks/useCursor";
 import CursorOverlay from "@/components/CursonOverlay";
-// import VersionHistoryPanel from "@/components/version/VersionHistoryPanel";
-// import { useVersionSave } from "@/hooks/useVersionSave";
 
 export default function BlockEditor({ pageId }: { pageId: number }) {
   const { activeWorkspace } = useWorkspace();
@@ -37,16 +35,13 @@ export default function BlockEditor({ pageId }: { pageId: number }) {
   const synced = useRef(false);
 
   const canEdit = activeWorkspace?.role !== "VIEWER";
-  // const { scheduleVersionSave, flushVersionSave } = useVersionSave(pageId);
 
-  // Reset on page navigation
   useEffect(() => {
     synced.current = false;
     setIcon("");
     setCover("");
   }, [pageId]);
 
-  // Sync icon/cover once when page data arrives
   useEffect(() => {
     if (page && !synced.current) {
       setIcon(page.icon ?? "");
@@ -55,20 +50,13 @@ export default function BlockEditor({ pageId }: { pageId: number }) {
     }
   }, [page]);
 
-  // Flush version save on unmount
-  // useEffect(() => {
-  //   return () => {
-  //     if (blocks.length > 0) flushVersionSave(blocks);
-  //   };
-  // }, [blocks, flushVersionSave]);
-
-  // Central WS message handler
   const handleMessage = useCallback(
     (msg: Record<string, unknown>) => {
       switch (msg.type) {
         case "cursor_update":
         case "user_left":
         case "user_joined":
+          // eslint-disable-next-line react-hooks/immutability
           handleCursorMessage(msg);
           break;
 
@@ -77,10 +65,10 @@ export default function BlockEditor({ pageId }: { pageId: number }) {
             prev.map((b) =>
               b.id === msg.blockId
                 ? {
-                    ...b,
-                    content: msg.content as Block["content"],
-                    type: (msg.blockType as Block["type"]) ?? b.type,
-                  }
+                  ...b,
+                  content: msg.content as Block["content"],
+                  type: (msg.blockType as Block["type"]) ?? b.type,
+                }
                 : b
             )
           );
@@ -107,30 +95,27 @@ export default function BlockEditor({ pageId }: { pageId: number }) {
         case "block_deleted":
           setBlocks(prev => prev.filter(b => b.id !== msg.blockId));
           break;
-        }
+      }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [setBlocks, refetchBlocks]
   );
 
-  const { send } = useWebSocket({
+  const { send, doc: yDoc } = useWebSocket({
     pageId: String(pageId),
     workspaceId: String(activeWorkspace?.id),
     onMessage: handleMessage,
   });
 
-  const { cursors,  sendCursorToBlock, handleCursorMessage } = useCursor(
+  const { cursors, sendCursorToBlock, handleCursorMessage } = useCursor(
     send,
     String(pageId)
   );
 
-  // Wrap optimisticUpdateBlock to also schedule a version save
   const handleOptimisticUpdate = useCallback(
     (blockId: number, updates: Partial<Block>) => {
       optimisticUpdateBlock(blockId, updates);
-      //scheduleVersionSave(blocks);
     },
-    [optimisticUpdateBlock, blocks]
+    [optimisticUpdateBlock]
   );
 
   const handleIconChange = async (newIcon: string) => {
@@ -163,7 +148,6 @@ export default function BlockEditor({ pageId }: { pageId: number }) {
         onCoverChange={handleCoverChange}
       />
 
-      {/* Toolbar */}
       <div className="flex items-center justify-end px-24 py-2 border-b border-zinc-100 dark:border-zinc-800">
         <button
           onClick={() => setHistoryOpen(true)}
@@ -174,11 +158,7 @@ export default function BlockEditor({ pageId }: { pageId: number }) {
         </button>
       </div>
 
-      {/* Editor — cursor tracking wrapper */}
-      <div
-        className="relative mx-auto max-w-225 px-24 pb-32"
-      >
-        {/* Remote cursors */}
+      <div className="relative mx-auto max-w-225 px-24 pb-32">
         <CursorOverlay cursors={cursors} />
 
         <BlockList
@@ -190,9 +170,10 @@ export default function BlockEditor({ pageId }: { pageId: number }) {
           optimisticDeleteBlock={optimisticDeleteBlock}
           optimisticAddBlock={optimisticAddBlock}
           setBlocks={setBlocks}
-          sendWsMessage={canEdit ? send : () => {}}
-          canEdit={canEdit} 
-          sendCursorToBlock={canEdit ? sendCursorToBlock : undefined}  
+          sendWsMessage={canEdit ? send : () => { }}
+          canEdit={canEdit}
+          sendCursorToBlock={canEdit ? sendCursorToBlock : undefined}
+          yDoc={yDoc}
         />
 
         {!canEdit && (
@@ -201,14 +182,6 @@ export default function BlockEditor({ pageId }: { pageId: number }) {
           </p>
         )}
       </div>
-
-      {/* Version history panel */}
-      {/* <VersionHistoryPanel
-        pageId={pageId}
-        open={historyOpen}
-        onClose={() => setHistoryOpen(false)}
-        onRestored={refetchBlocks}
-      /> */}
     </div>
   );
 }

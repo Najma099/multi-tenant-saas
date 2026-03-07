@@ -6,6 +6,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Block, BlockType } from "@/types/block.type";
 import { MoreHorizontal, Trash, Type, ListTodo, Code, Heading1, Heading2 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import * as Y from "yjs";
 
 interface BlockItemProps {
   block: Block;
@@ -17,6 +18,7 @@ interface BlockItemProps {
   optimisticUpdate: (blockId: number, updates: Partial<Block>) => void;
   sendWsMessage: (msg: Record<string, unknown>) => void;
   sendCursorToBlock?: (blockId: number) => void;
+  yDoc?: Y.Doc;
 }
 
 export default function BlockItem({
@@ -27,7 +29,8 @@ export default function BlockItem({
   isFirst,
   optimisticUpdate,
   sendWsMessage,
-  sendCursorToBlock
+  sendCursorToBlock,
+  yDoc
 }: BlockItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState(block.content.text || "");
@@ -67,7 +70,25 @@ export default function BlockItem({
     setContent(block.content.text || "");
     setCurrentType(block.type);
     setCurrentContent(block.content);
-  }, [block.content, block.type, block.id]);
+  }, [block.type, block.id]);
+
+
+  useEffect(() => {
+    if (!yDoc || block.id < 0) return;
+    const yTexts = yDoc.getMap("block-texts");
+    let yText = yTexts.get(block.id.toString()) as Y.Text | undefined;
+    if (!yText) {
+      yText = new Y.Text(block.content.text || "");
+      yTexts.set(block.id.toString(), yText);
+    }
+    const observer = () => {
+      const newText = yText!.toString();
+      setContent(newText);
+      setCurrentContent(prev => ({ ...prev, text: newText }));
+    };
+    yText.observe(observer);
+    return () => yText!.unobserve(observer);
+  }, [yDoc, block.id]);
 
   useEffect(() => {
     if (isEditing) autoResize();
@@ -75,7 +96,7 @@ export default function BlockItem({
 
   const handleSave = () => {
     if (showSlashMenu) { setIsEditing(false); return; }
-    if (content === block.content.text) { setIsEditing(false); return; }
+    if (content === currentContent.text) { setIsEditing(false); return; }
 
     const newContent = { ...currentContent, text: content };
     optimisticUpdate(block.id, { content: newContent });
@@ -198,8 +219,20 @@ export default function BlockItem({
         ref={inputRef}
         value={content}
         onChange={(e) => {
-          setContent(e.target.value);
+          const newVal = e.target.value;
+          setContent(newVal);
           sendCursorToBlock?.(block.id);
+
+          if (yDoc && block.id > 0) {
+            const yTexts = yDoc.getMap("block-texts");
+            const yText = yTexts.get(block.id.toString()) as Y.Text;
+            if (yText) {
+              yDoc.transact(() => {
+                yText.delete(0, yText.length);
+                yText.insert(0, newVal);
+              });
+            }
+          }
         }}
         onBlur={handleSave}
         onKeyDown={handleKeyDown}
@@ -244,7 +277,7 @@ export default function BlockItem({
 
   const renderBlock = () => {
     if (isEditing) return renderTextarea();
-    const displayContent = currentContent.text || "";
+    const displayContent = content || "";
 
     if (isFirst) {
       return (

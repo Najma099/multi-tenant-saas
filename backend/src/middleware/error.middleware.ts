@@ -12,8 +12,6 @@ export const errorHandler = (
     let message = 'Something went wrong';
     const errors: string[] = [];
 
-    console.error('Error:', err);
-
     if (err instanceof ApiError) {
         ApiError.handle(err, res);
         return;

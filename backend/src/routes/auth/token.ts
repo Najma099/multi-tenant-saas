@@ -17,7 +17,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const accessToken = getAccessToken(req);
     const { refreshToken } = req.body;
-  
+
     const accessTokenPayload = await JWT.decode(accessToken);
     validateRefreshToken(accessTokenPayload as RefreshTokenPayload);
 
@@ -33,24 +33,21 @@ router.post(
     if (!refreshToken) {
       throw new AuthFailureError('Refresh token missing');
     }
-  
+
     const refreshTokenpayload = (await JWT.validate(refreshToken)) as RefreshTokenPayload;
 
     const keystore = await KeystoreRepo.find(
       userId,
-      accessTokenPayload.prm, 
+      accessTokenPayload.prm,
       refreshTokenpayload.prm,
     );
-
-    console.log(keystore);
 
     if (!keystore) {
       throw new AuthFailureError('Refresh token revoked');
     }
- 
+
     await KeystoreRepo.remove(keystore.id);
     const tokens = await createTokens(userId);
-    console.log(tokens);
 
     new SuccessResponse('Token refreshed', tokens).send(res);
   }),

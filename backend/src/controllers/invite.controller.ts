@@ -10,7 +10,6 @@ import { RoleType } from "@prisma/client";
 
 export const sendInvite = asyncHandler(
   async (req: ProtectedRequest, res: Response) => {
-    //console.log()
     const { email, role } = req.body;
     const workspaceId = Number(req.workspaceId);
 

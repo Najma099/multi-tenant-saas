@@ -17,7 +17,7 @@ interface AuthModalProps {
 
 export default function AuthModal({ isOpen, onClose, initialMode = "login" }: AuthModalProps) {
   const router = useRouter();
-  const { refreshUser } = useAuth(); 
+  const { refreshUser } = useAuth();
   const { refreshWorkspaces } = useWorkspace();
   const searchParams = useSearchParams();
   const [authMode, setAuthMode] = useState(initialMode);
@@ -31,29 +31,26 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
     try {
       const endpoint = authMode === "register" ? "/auth/signup" : "/auth/signin";
       const payload = authMode === "register" ? formData : { email: formData.email, password: formData.password };
-      
+
       const res = await apiClient.post<AuthResponse>(endpoint, payload);
-      console.log("FULL RESPONSE:", res);
       apiClient.setTokens(res.tokens);
       localStorage.setItem("user", JSON.stringify(res.user));
 
       await refreshUser();
       const freshWorkspaces = await refreshWorkspaces();
-      console.log("freshWorkspaces", freshWorkspaces);
-   
+
       toast.success(authMode === "register" ? "Welcome to Notion!" : "Welcome back!");
       onClose();
-      
-      const redirectTo = searchParams.get("redirect") || 
-      (freshWorkspaces.length > 0 
-        ? `/workspace/${freshWorkspaces[0].id}` 
-        : "/wprkspace/9");
-        console.log("redirectTo", redirectTo);
+
+      const redirectTo = searchParams.get("redirect") ||
+        (freshWorkspaces.length > 0
+          ? `/workspace/${freshWorkspaces[0].id}`
+          : "/wprkspace/9");
       router.push(redirectTo);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-        const errorMessage = err.response?.data?.message || err.message || "An error occurred";
-        toast.error(errorMessage);
+      const errorMessage = err.response?.data?.message || err.message || "An error occurred";
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -65,10 +62,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px] p-4 animate-in fade-in duration-200">
       {/* Container - Fixed "rw-full" typo to "relative w-full" */}
       <div className="relative w-full max-w-md rounded-xl bg-white p-8 shadow-2xl dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 transition-all">
-        
+
         {/* Close Button */}
-        <button 
-          onClick={onClose} 
+        <button
+          onClick={onClose}
           className="absolute right-5 top-5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
         >
           <X size={20} />
@@ -77,7 +74,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
         {/* Header/Logo */}
         <div className="flex flex-col items-center mb-8">
           <div className="w-12 h-12 bg-black dark:bg-zinc-100 rounded-xl flex items-center justify-center mb-4 shadow-sm">
-             <span className="text-white dark:text-black font-bold text-xl">N</span>
+            <span className="text-white dark:text-black font-bold text-xl">N</span>
           </div>
           <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
             {authMode === "login" ? "Log in" : "Create an account"}
@@ -150,7 +147,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
           <button
             onClick={() => {
               setAuthMode(authMode === "login" ? "register" : "login");
-              setFormData({ name: "", email: "", password: "" }); 
+              setFormData({ name: "", email: "", password: "" });
             }}
             className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors font-medium"
           >
