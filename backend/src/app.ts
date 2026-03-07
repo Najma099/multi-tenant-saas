@@ -6,7 +6,6 @@ import { originUrl } from './config';
 import router from './routes/index';
 import { errorHandler } from './middleware/error.middleware';
 import { NotFoundError } from './core/ApiError';
-
 import { Worker } from 'node:worker_threads';
 import path from 'path';
 
@@ -21,15 +20,8 @@ export const app = express();
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true, parameterLimit: 50000 }));
-
 app.use(helmet());
-
-app.use(cors({
-  origin: originUrl,
-  credentials: true,
-  optionsSuccessStatus: 200,
-}));
-
+app.use(cors({ origin: originUrl, credentials: true, optionsSuccessStatus: 200 }));
 app.use(cookieParser());
 
 app.get('/health', async (_req, res) => {
@@ -45,15 +37,29 @@ app.use((_req, _res, next) => next(new NotFoundError()));
 app.use(errorHandler);
 
 function startWorker() {
-  dbWorker = new Worker(path.resolve(__dirname, './worker.js'));
+  const workerPath = path.resolve(__dirname, './workers/worker.js');
+  console.log(`[App] Spawning worker from: ${workerPath}`); // 👈 confirm path
+
+  dbWorker = new Worker(workerPath, {
+    stdout: true, // 👈 pipe worker stdout to main
+    stderr: true, // 👈 pipe worker stderr to main
+  });
+
+  dbWorker.stdout?.pipe(process.stdout);
+  dbWorker.stderr?.pipe(process.stderr);
+
+  dbWorker.on('online', () => {
+    console.log('[App] ✅ DB Worker is online'); // 👈 confirms thread started
+  });
 
   dbWorker.on('error', (err) => {
-    console.error('DB Worker error:', err);
+    console.error('[App] ❌ DB Worker error:', err);
   });
 
   dbWorker.on('exit', (code) => {
+    console.warn(`[App] DB Worker exited with code ${code}`);
     if (code !== 0) {
-      console.error(`DB Worker exited with code ${code}, restarting...`);
+      console.log('[App] Restarting worker in 3s...');
       setTimeout(startWorker, 3000);
     }
   });
@@ -62,7 +68,7 @@ function startWorker() {
 startWorker();
 
 function shutdown() {
-  console.log("Shutting down worker...");
+  console.log('[App] Shutdown signal received, notifying worker...');
   dbWorker?.postMessage('shutdown');
 }
 
