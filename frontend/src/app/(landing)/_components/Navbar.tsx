@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Logo } from "./Logo";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/Spinner";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import AuthModal from "@/components/AuthModel";
 
@@ -28,7 +28,7 @@ export const Navbar = () => {
 
         <div className="flex w-full items-center justify-end md:ml-auto">
           <div className="flex items-center gap-x-2">
-            {loading && <Spinner />}
+            {loading && <Skeleton className="h-9 w-24 rounded-md" />}
 
             {!loading && !user && (
               <>

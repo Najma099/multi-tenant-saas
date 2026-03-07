@@ -10,10 +10,10 @@ class WsClient {
   private reconnectDelay = 1000;
   private url = "";
   private joinPayload: Record<string, unknown> | null = null;
+  private messageQueue: string[] = [];
 
   connect(url: string, joinPayload: Record<string, unknown>) {
-    console.log("WS connecting to:", url);
-    this.url = process.env.NEXT_PUBLIC_WS_URL!;
+    this.url = url;
     this.joinPayload = joinPayload;
     this.shouldReconnect = true;
     this._open();
@@ -28,49 +28,58 @@ class WsClient {
     this.ws = new WebSocket(this.url);
 
     this.ws.onopen = () => {
-      console.log("WS: connected");
       this.reconnectDelay = 1000;
       if (this.joinPayload) {
         this.send({ type: "join", tabId, ...this.joinPayload });
       }
+      this._flushQueue();
     };
 
     this.ws.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data);
         this.handlers.forEach((h) => h(msg));
-      } catch {
-        console.error("WS: failed to parse message", event.data);
-      }
+      } catch { }
     };
 
     this.ws.onclose = (e) => {
-      console.warn("WS: disconnected", e.code, e.reason);
       if (e.code === 4003) {
-        console.error("WS: unauthorized, stopping reconnect");
         this.shouldReconnect = false;
         return;
       }
       if (this.shouldReconnect) this._scheduleReconnect();
     };
 
-    this.ws.onerror = (err) => {
-      console.error("WS: error", err);
-    };
+    this.ws.onerror = () => { };
   }
 
   private _scheduleReconnect() {
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
-    console.log(`WS: reconnecting in ${this.reconnectDelay}ms...`);
     this.reconnectTimer = setTimeout(() => {
       this._open();
       this.reconnectDelay = Math.min(this.reconnectDelay * 2, 30_000);
     }, this.reconnectDelay);
   }
 
+  private _flushQueue() {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+
+    if (this.messageQueue.length === 0) return;
+
+    const toSend = [...this.messageQueue];
+    this.messageQueue = [];
+
+    toSend.forEach(msg => {
+      this.ws?.send(msg);
+    });
+  }
+
   send(msg: Record<string, unknown>) {
+    const payload = JSON.stringify(msg);
     if (this.ws?.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(msg));
+      this.ws.send(payload);
+    } else {
+      this.messageQueue.push(payload);
     }
   }
 
@@ -84,6 +93,7 @@ class WsClient {
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
     this.ws?.close();
     this.ws = null;
+    this.messageQueue = [];
   }
 
   getTabId() {

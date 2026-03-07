@@ -4,17 +4,17 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import apiClient from "@/lib/apiClient";
 import { useAuth } from "@/context/AuthContext";
 import { Workspace } from "@/types/workspace.type";
-import { 
-  createWorkspace, 
-  updateWorkspace, 
-  deleteWorkspace 
+import {
+  createWorkspace,
+  updateWorkspace,
+  deleteWorkspace
 } from "@/lib/workspace.api";
 
 interface WorkspaceContextType {
   workspaces: Workspace[];
   activeWorkspace: Workspace | null;
   isLoading: boolean;
-  
+
   setWorkspaces: React.Dispatch<React.SetStateAction<Workspace[]>>;
   setActiveWorkspace: React.Dispatch<React.SetStateAction<Workspace | null>>;
   switchWorkspace: (workspace: Workspace) => void;
@@ -32,7 +32,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
- 
+
   const refreshWorkspaces = useCallback(async () => {
     const token = apiClient.getAccessToken();
     if (!token) {
@@ -50,15 +50,14 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       if (data.length > 0) {
         const savedId = localStorage.getItem("lastWorkspaceId");
         const found = data.find((w) => w.id.toString() === savedId);
-        
-        
+
+
         setActiveWorkspace(found || data[0]);
       } else {
         setActiveWorkspace(null);
       }
       return data;
     } catch (err) {
-      console.error("Error fetching workspaces:", err);
       return [];
     } finally {
       setIsLoading(false);
@@ -71,7 +70,6 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       await refreshWorkspaces();
       return response;
     } catch (error) {
-      console.error("Failed to create workspace", error);
       throw error;
     }
   };
@@ -82,7 +80,6 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       await refreshWorkspaces();
       return response;
     } catch (error) {
-      console.error("Failed to rename workspace", error);
       throw error;
     }
   };
@@ -90,14 +87,13 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const removeWorkspace = async (id: number,) => {
     try {
       await deleteWorkspace(id);
-      
+
       if (activeWorkspace?.id === id) {
         localStorage.removeItem("lastWorkspaceId");
       }
-      
+
       await refreshWorkspaces();
     } catch (error) {
-      console.error("Failed to delete workspace", error);
       throw error;
     }
   };

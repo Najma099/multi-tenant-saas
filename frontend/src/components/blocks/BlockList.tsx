@@ -4,6 +4,8 @@ import { Block, BlockType } from "@/types/block.type";
 import { createBlock, deleteBlock } from "@/lib/block.api";
 import BlockItem from "./BlockItem";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import * as Y from "yjs";
 
 export default function BlockList({
   blocks,
@@ -14,8 +16,9 @@ export default function BlockList({
   optimisticAddBlock,
   setBlocks,
   sendWsMessage,
-  canEdit,  
+  canEdit,
   sendCursorToBlock,
+  yDoc,
 }: {
   blocks: Block[];
   loading: boolean;
@@ -26,8 +29,9 @@ export default function BlockList({
   optimisticAddBlock: (newBlock: Block) => void;
   setBlocks: React.Dispatch<React.SetStateAction<Block[]>>;
   sendWsMessage: (msg: Record<string, unknown>) => void;
-  canEdit: boolean;   
-   sendCursorToBlock?: (blockId: number) => void;
+  canEdit: boolean;
+  sendCursorToBlock?: (blockId: number) => void;
+  yDoc: Y.Doc;
 }) {
 
   const handleCreateBelow = async (position: number) => {
@@ -56,10 +60,9 @@ export default function BlockList({
         tempId,
         realBlock,
       });
-    } catch (error) {
-      console.error("Failed to create block:", error);
       toast.error("Failed to create block");
       optimisticDeleteBlock(tempId);
+    } catch (error) {
     }
   };
 
@@ -73,17 +76,26 @@ export default function BlockList({
         type: "block_delete",
         blockId,
       });
-    } catch (error) {
-      console.error("Failed to delete block:", error);
       toast.error("Failed to delete block");
       if (deletedBlock) optimisticAddBlock(deletedBlock);
+    } catch (error) {
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-zinc-500">Loading blocks...</p>
+      <div className="space-y-5 py-8 w-full max-w-3xl mx-auto">
+        {/* Page Title Skeleton */}
+        <Skeleton className="h-10 w-[60%] mb-10" />
+
+        {/* Blocks Skeletons */}
+        <div className="space-y-3">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-[90%]" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-[95%]" />
+        </div>
       </div>
     );
   }
@@ -110,6 +122,7 @@ export default function BlockList({
             optimisticUpdate={optimisticUpdateBlock}
             sendWsMessage={sendWsMessage}
             sendCursorToBlock={canEdit ? sendCursorToBlock : undefined}
+            yDoc={yDoc}
           />
         ))
       )}

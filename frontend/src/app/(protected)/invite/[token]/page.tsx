@@ -9,7 +9,7 @@ import { useWorkspace } from "@/context/WorkspaceContext";
 
 export default function InvitePage() {
   const router = useRouter();
-  const params = useParams<{ token: string }>(); 
+  const params = useParams<{ token: string }>();
   const { refreshWorkspaces } = useWorkspace();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [errorMessage, setErrorMessage] = useState("");
@@ -17,15 +17,13 @@ export default function InvitePage() {
   useEffect(() => {
     const handleAccept = async () => {
       try {
-        console.log(params);
-        
         if (!params.token) return;
         const { workspaceId } = await acceptWorkspaceInvite(params.token);
         await refreshWorkspaces();
-        
+
         setStatus("success");
         toast.success("Welcome to the workspace!");
-        
+
         setTimeout(() => {
           router.push(`/workspace/${workspaceId}`);
         }, 1500);
@@ -49,20 +47,20 @@ export default function InvitePage() {
             <p className="text-zinc-600 dark:text-zinc-400">Joining workspace...</p>
           </>
         )}
-        
+
         {status === "success" && (
           <>
             <CheckCircle2 className="w-12 h-12 text-green-600 mx-auto mb-4" />
             <p className="text-zinc-900 dark:text-zinc-100 font-semibold">Success! Redirecting...</p>
           </>
         )}
-        
+
         {status === "error" && (
           <>
             <XCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
             <p className="text-zinc-900 dark:text-zinc-100 font-semibold mb-2">Error</p>
             <p className="text-sm text-zinc-500">{errorMessage}</p>
-            <button 
+            <button
               onClick={() => router.push("/")}
               className="mt-4 px-4 py-2 bg-zinc-900 text-white rounded-lg"
             >

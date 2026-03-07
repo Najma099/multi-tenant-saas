@@ -41,7 +41,7 @@ async function fetchCurrentUser(forceRefresh = false): Promise<User | null> {
     if (!token) return null;
 
     try {
-        const response = await apiClient.get<{user: User}>('/auth/me');
+        const response = await apiClient.get<{ user: User }>('/auth/me');
         const user = response.user;
         if (user) {
             localStorage.setItem(STORAGE_USER, JSON.stringify(user));
@@ -74,7 +74,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 apiClient.startTokenRefreshTimer();
             }
         } catch (err) {
-            console.error('Auth check failed', err);
             toast.error('Please login again.');
             setUser(null);
         } finally {
@@ -90,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
             await apiClient.delete('/auth/signout');
         } catch {
-            
+
         } finally {
             apiClient.clearTokens();
             localStorage.removeItem(STORAGE_USER);

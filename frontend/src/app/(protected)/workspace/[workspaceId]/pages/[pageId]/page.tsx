@@ -4,11 +4,12 @@ import { useParams } from "next/navigation";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import { useEffect } from "react";
 import BlockEditor from "@/components/blocks/BlockEditor";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function PageBlock() {
   const params = useParams();
   const { activeWorkspace, workspaces, switchWorkspace } = useWorkspace();
-  
+
   const pageId = Number(params.pageId);
   const workspaceId = params.workspaceId as string;
 
@@ -21,8 +22,9 @@ export default function PageBlock() {
 
   if (!activeWorkspace) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-zinc-500">Loading workspace...</p>
+      <div className="flex flex-col items-center justify-center h-screen space-y-4">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-4 w-64" />
       </div>
     );
   }
