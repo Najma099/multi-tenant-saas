@@ -24,7 +24,6 @@ export async function handleEdit(client: ClientMeta, payload: EditPayload): Prom
       blockType: payload.type,
     }, client);
   } catch (err) {
-    console.error("WS: failed to save block edit", err);
 
     client.ws.send(JSON.stringify({
       type: "edit_error",

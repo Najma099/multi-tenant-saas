@@ -78,6 +78,7 @@ model Page {
   createdBy    Int      @map("created_by")
   icon        String?
   coverImage  String?
+  yjsState     Bytes?   @map("yjs_state")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 

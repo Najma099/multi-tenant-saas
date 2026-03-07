@@ -16,21 +16,20 @@ export default router.use(
   validateRequest(AuthHeaderSchema, 'headers'),
   asyncHandler(async (req: ProtectedRequest, _res, next) => {
     const accessToken = getAccessToken(req);
-    console.log(req.params);
     try {
       const payload = await JWT.validate(accessToken);
       validateAccessToken(payload as AccessTokenPayload);
-      
+
       const userId = Number(payload.sub);
       if (isNaN(userId)) {
         throw new AuthFailureError('Invalid user id in token');
       }
-      
+
       const user = await UserRepo.findById(userId);
       if (!user) {
         throw new AuthFailureError('User not registered');
       }
-     
+
       const keystore = await KeystoreRepo.find(
         user.id,
         payload.prm,

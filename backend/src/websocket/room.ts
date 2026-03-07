@@ -29,7 +29,6 @@ export function joinRoom(pageId: string, client: ClientMeta): void {
   rooms.get(pageId)!.add(client);
 }
 
-// Returns true if this was the user's LAST tab in the room
 export function leaveRoom(pageId: string, client: ClientMeta): boolean {
   const room = rooms.get(pageId);
   if (!room) return true;

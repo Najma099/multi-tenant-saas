@@ -16,7 +16,6 @@ router.get(
     const userId = req.user.id;
 
     const workspaces = await WorkspaceRepo.getAllWorkspacesForUser(userId);
-    console.log(workspaces);
 
     new SuccessResponse(
       'Workspaces fetched successfully',
@@ -27,18 +26,18 @@ router.get(
 
 
 router.post(
-    '/',
-    authentication,
-    validateRequest(CreateWorkspaceSchema),
-    asyncHandler(async(req: ProtectedRequest, res) => {
-        const userId = req.user.id;
-        const { name } = req.body as CreateWorkspaceRequest;
-        const workspace = await WorkspaceRepo.create(userId, name);
-        new SuccessResponse(
-            'Workspace created successfully',
-            workspace
-        ).send(res);
-    })
+  '/',
+  authentication,
+  validateRequest(CreateWorkspaceSchema),
+  asyncHandler(async (req: ProtectedRequest, res) => {
+    const userId = req.user.id;
+    const { name } = req.body as CreateWorkspaceRequest;
+    const workspace = await WorkspaceRepo.create(userId, name);
+    new SuccessResponse(
+      'Workspace created successfully',
+      workspace
+    ).send(res);
+  })
 )
 
 export default router;
