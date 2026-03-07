@@ -96,3 +96,19 @@ export async function reorderBlocks(
     ),
   );
 }
+
+export async function syncBlockText(blockId: number, text: string) {
+  const block = await prisma.block.findUnique({
+    where: { id: blockId },
+    select: { content: true }
+  });
+
+  if (!block) return;
+
+  const merged = { ...(block.content as object), text };
+
+  return prisma.block.update({
+    where: { id: blockId },
+    data: { content: merged as Prisma.InputJsonValue }
+  });
+}

@@ -17,15 +17,11 @@ export async function getOrLoadDocument(pageId: string): Promise<Y.Doc> {
                     select: { yjsState: true }
                 });
                 if (page && page.yjsState) {
-                    Y.applyUpdate(doc, new Uint8Array(page.yjsState));
+                    Y.applyUpdate(doc, new Uint8Array(page.yjsState), 'remote'); // 👈 tag initial load too
                 }
             } catch (e) {
+                console.error(`[YDoc] ❌ Failed to load pageId=${pageId}:`, e);
             }
-
-            doc.on("update", (update: Uint8Array) => {
-                const updateBase64 = Buffer.from(update).toString("base64");
-                enqueueYjsUpdate(parseInt(pageId), updateBase64).catch(() => { });
-            });
 
             documents.set(pageId, doc);
             loadingDocs.delete(pageId);
@@ -40,8 +36,9 @@ export async function applyClientUpdate(pageId: string, updateBase64: string): P
     const doc = await getOrLoadDocument(pageId);
     try {
         const updateBuffer = Buffer.from(updateBase64, "base64");
-        Y.applyUpdate(doc, updateBuffer);
+        Y.applyUpdate(doc, updateBuffer, 'remote'); // 👈 tagged so listener ignores it
     } catch (err) {
+        console.error(`[YDoc] ❌ applyClientUpdate failed for pageId=${pageId}:`, err);
     }
 }
 

@@ -29,6 +29,8 @@ export async function enqueueYjsUpdate(pageId: number, updateStr: string) {
     try {
         const data = JSON.stringify({ pageId, update: updateStr, timestamp: Date.now() });
         await redisClient.lpush(YJS_UPDATE_QUEUE, data);
+        console.log(`[Redis] ✅ Enqueued update for pageId=${pageId}`); 
     } catch (err) {
+        console.error(`[Redis] ❌ Failed to enqueue for pageId=${pageId}:`, err); 
     }
 }

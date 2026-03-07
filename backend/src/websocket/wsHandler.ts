@@ -6,6 +6,7 @@ import { handleBlockCreate } from "./Handler/createHandler";
 import { handleBlockDelete } from "./Handler/deleteHandler";
 import { applyClientUpdate } from "./yjsManager";
 import { broadcastToRoom } from "./room";
+import { enqueueYjsUpdate } from "../services/redisQueue";
 
 interface IncomingMessage {
   type: string;
@@ -32,7 +33,7 @@ export function handleMessage(client: ClientMeta, raw: string): void {
     case "block_delete":
       handleBlockDelete(client, {
         blockId: msg.blockId as number,
-      });
+      }).catch((err) => console.error('[WS] block_delete failed:', err)); ;
       break;
     case "cursor":
       handleCursor(client, { blockId: msg.blockId as number });
@@ -48,7 +49,13 @@ export function handleMessage(client: ClientMeta, raw: string): void {
 
     case "yjs_update":
       const updateBase64 = msg.update as string;
-      applyClientUpdate(client.pageId, updateBase64).catch(() => { });
+      
+      applyClientUpdate(client.pageId, updateBase64).catch(() => {});
+    
+      enqueueYjsUpdate(parseInt(client.pageId), updateBase64)
+        .then(() => console.log(`[WS] ✅ Enqueued update for pageId=${client.pageId}`))
+        .catch((err) => console.error(`[WS] ❌ Enqueue failed:`, err));
+
       broadcastToRoom(client.pageId, {
         type: "yjs_update",
         update: updateBase64,
