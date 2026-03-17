@@ -22,8 +22,9 @@ export class CustomYjsProvider {
         this.wsSend = wsSend;
 
         // Listen to local changes and send them to the server
-        this.doc.on('update', (update: Uint8Array) => {
-            // Y.encodeStateAsUpdate returns Uint8Array, we base64 encode it for our JSON WS
+        this.doc.on('update', (update: Uint8Array, origin: unknown) => {
+            if (origin === 'remote') return; // 👈 skip remote updates, don't echo back
+
             const updateBase64 = btoa(String.fromCharCode(...new Uint8Array(update)));
             this.wsSend({
                 type: 'yjs_update',
@@ -36,11 +37,11 @@ export class CustomYjsProvider {
     public handleMessage(msg: YjsMessage) {
         if (msg.type === 'yjs_init') {
             const stateBuffer = Uint8Array.from(atob(msg.state), c => c.charCodeAt(0));
-            Y.applyUpdate(this.doc, stateBuffer);
+            Y.applyUpdate(this.doc, stateBuffer, 'remote');
             this.isSynced = true;
         } else if (msg.type === 'yjs_update') {
             const updateBuffer = Uint8Array.from(atob(msg.update), c => c.charCodeAt(0));
-            Y.applyUpdate(this.doc, updateBuffer);
+            Y.applyUpdate(this.doc, updateBuffer, 'remote'); 
         }
     }
 }

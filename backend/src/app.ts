@@ -24,7 +24,8 @@ app.use(helmet());
 app.use(cors({ origin: originUrl, credentials: true, optionsSuccessStatus: 200 }));
 app.use(cookieParser());
 
-app.get('/health', async (_req, res) => {
+app.use('/api/v1', router);
+app.get('/api/v1/health', async (_req, res) => {
   try {
     res.json({ status: 'ok' });
   } catch {
@@ -32,24 +33,23 @@ app.get('/health', async (_req, res) => {
   }
 });
 
-app.use('/api/v1', router);
 app.use((_req, _res, next) => next(new NotFoundError()));
 app.use(errorHandler);
 
 function startWorker() {
   const workerPath = path.resolve(__dirname, './workers/worker.js');
-  console.log(`[App] Spawning worker from: ${workerPath}`); // 👈 confirm path
+  console.log(`[App] Spawning worker from: ${workerPath}`); 
 
   dbWorker = new Worker(workerPath, {
-    stdout: true, // 👈 pipe worker stdout to main
-    stderr: true, // 👈 pipe worker stderr to main
+    stdout: true, 
+    stderr: true, 
   });
 
   dbWorker.stdout?.pipe(process.stdout);
   dbWorker.stderr?.pipe(process.stderr);
 
   dbWorker.on('online', () => {
-    console.log('[App] ✅ DB Worker is online'); // 👈 confirms thread started
+    console.log('[App] ✅ DB Worker is online'); 
   });
 
   dbWorker.on('error', (err) => {

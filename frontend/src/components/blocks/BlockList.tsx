@@ -3,7 +3,6 @@
 import { Block, BlockType } from "@/types/block.type";
 import { createBlock, deleteBlock } from "@/lib/block.api";
 import BlockItem from "./BlockItem";
-import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import * as Y from "yjs";
 
@@ -36,7 +35,6 @@ export default function BlockList({
 
   const handleCreateBelow = async (position: number) => {
     const tempId = -Date.now();
-
     const tempBlock: Block = {
       id: tempId,
       pageId,
@@ -55,30 +53,21 @@ export default function BlockList({
         const filtered = prev.filter(b => b.id !== tempId);
         return [...filtered, realBlock].sort((a, b) => a.position - b.position);
       });
-      sendWsMessage({
-        type: "block_create",
-        tempId,
-        realBlock,
-      });
-      toast.error("Failed to create block");
+      sendWsMessage({ type: "block_create", tempId, realBlock });
+    } catch {
       optimisticDeleteBlock(tempId);
-    } catch (error) {
     }
   };
 
-  const handleDelete = async (blockId: number) => {
+    const handleDelete = async (blockId: number) => {
     const deletedBlock = blocks.find(b => b.id === blockId);
     optimisticDeleteBlock(blockId);
 
     try {
       await deleteBlock(pageId, blockId);
-      sendWsMessage({
-        type: "block_delete",
-        blockId,
-      });
-      toast.error("Failed to delete block");
-      if (deletedBlock) optimisticAddBlock(deletedBlock);
-    } catch (error) {
+      sendWsMessage({ type: "block_delete", blockId });
+    } catch {
+      if (deletedBlock) optimisticAddBlock(deletedBlock); // rollback on failure
     }
   };
 

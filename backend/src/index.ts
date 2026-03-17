@@ -4,12 +4,12 @@ import { port } from "./config";
 import { initWsServer } from "./websocket/wsServer";
 
 process.on("uncaughtException", (err) => {
-  console.error('[Server] Uncaught Exception:', err); // 👈 log it, don't swallow
+  console.error('[Server] Uncaught Exception:', err); 
   process.exit(1);
 });
 
 process.on("unhandledRejection", (reason) => {
-  console.error('[Server] Unhandled Rejection:', reason); // 👈 same
+  console.error('[Server] Unhandled Rejection:', reason);
   process.exit(1);
 });
 

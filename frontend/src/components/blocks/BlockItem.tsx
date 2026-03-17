@@ -76,18 +76,37 @@ export default function BlockItem({
   useEffect(() => {
     if (!yDoc || block.id < 0) return;
     const yTexts = yDoc.getMap("block-texts");
-    let yText = yTexts.get(block.id.toString()) as Y.Text | undefined;
-    if (!yText) {
-      yText = new Y.Text(block.content.text || "");
-      yTexts.set(block.id.toString(), yText);
-    }
-    const observer = () => {
-      const newText = yText!.toString();
-      setContent(newText);
-      setCurrentContent(prev => ({ ...prev, text: newText }));
+    const blockKey = block.id.toString();
+
+    const attachObserver = (yText: Y.Text) => {
+      const observer = () => {
+        const newText = yText.toString();
+        setContent(newText);
+        setCurrentContent(prev => ({ ...prev, text: newText }));
+      };
+      yText.observe(observer);
+      return () => yText.unobserve(observer);
     };
-    yText.observe(observer);
-    return () => yText!.unobserve(observer);
+
+  
+    let cleanup: (() => void) | undefined;
+    const existing = yTexts.get(blockKey) as Y.Text | undefined;
+    if (existing) cleanup = attachObserver(existing);
+
+  
+    const mapObserver = () => {
+      const yText = yTexts.get(blockKey) as Y.Text | undefined;
+      if (yText && !cleanup) {
+        cleanup = attachObserver(yText);
+      }
+    };
+
+    yTexts.observe(mapObserver);
+
+    return () => {
+      yTexts.unobserve(mapObserver);
+      cleanup?.();
+    };
   }, [yDoc, block.id]);
 
   useEffect(() => {
@@ -225,13 +244,26 @@ export default function BlockItem({
 
           if (yDoc && block.id > 0) {
             const yTexts = yDoc.getMap("block-texts");
-            const yText = yTexts.get(block.id.toString()) as Y.Text;
-            if (yText) {
-              yDoc.transact(() => {
-                yText.delete(0, yText.length);
-                yText.insert(0, newVal);
-              });
-            }
+            let yText = yTexts.get(block.id.toString()) as Y.Text | undefined;
+
+            yDoc.transact(() => {
+              if (!yText) {
+                yText = new Y.Text(newVal);
+                yTexts.set(block.id.toString(), yText);
+                return;
+              }
+
+              const old = yText.toString();
+              if (old === newVal) return;
+
+              let start = 0;
+              while (start < old.length && start < newVal.length && old[start] === newVal[start]) start++;
+              let oldEnd = old.length, newEnd = newVal.length;
+              while (oldEnd > start && newEnd > start && old[oldEnd - 1] === newVal[newEnd - 1]) { oldEnd--; newEnd--; }
+
+              if (oldEnd > start) yText.delete(start, oldEnd - start);
+              if (newEnd > start) yText.insert(start, newVal.slice(start, newEnd));
+            });
           }
         }}
         onBlur={handleSave}
