@@ -1,157 +1,212 @@
-# Zotion
+# Zotion ✦
 
-A Notion-style real-time collaborative workspace — built from scratch to understand the infrastructure modern collaboration platforms run on.
+> A Notion-style collaborative workspace — built from scratch, no shortcuts taken.
 
-No Firebase. No Auth0. No Socket.io. Just raw WebSockets, custom auth, and a hand-rolled queue architecture.
+Zotion is a real-time document editor where multiple people can write together, simultaneously, without conflicts. Under the hood, it uses **CRDTs, raw WebSockets, and a custom persistence pipeline** — every layer designed and controlled from scratch.
 
-**Live demo:** [zotion-live.vercel.app](https://zotion-live.vercel.app)
-
-> **Test accounts** — open in two separate browsers or incognito windows and edit the same page simultaneously:
->
-> `test@gmail.com` / `123456`  
-> `najmakhatun0999@gmail.com` / `123456`
+```
+No Firebase. No Socket.io. No managed auth.
+Just clean systems engineering.
+```
 
 ---
 
-## Tech Stack
+## ◈ Live Demo
 
-| Layer | Technology |
+🔗 **[zotion-live.vercel.app](https://zotion-live.vercel.app)**
+
+Open in two tabs and watch the magic happen.
+
+| Account | Password |
 |---|---|
-| Backend | Node.js, Express, Prisma ORM |
+| test@gmail.com | 123456 |
+| najmakhatun0999@gmail.com | 123456 |
+
+---
+
+## ◈ What Makes This Interesting
+
+Most real-time apps either use Firebase or glue together managed services. Zotion does neither.
+
+| Concept | What's happening |
+|---|---|
+| ⚡ Low latency | Database is never touched per keystroke |
+| 🔀 Conflict-free edits | CRDTs handle concurrent changes automatically |
+| 🧱 Decoupled pipeline | Real-time sync and persistence are fully independent |
+| 🔐 Secure sessions | JWT + refresh token rotation, multi-session support |
+| 📡 Reliable WebSockets | Heartbeat, auto-reconnect, offline buffering |
+
+---
+
+## ◈ How It Works
+
+### The Big Picture
+
+```
+Browser (Yjs Doc)
+      │
+      │  WebSocket — CRDT updates
+      ▼
+WebSocket Server — in-memory Y.Doc
+      │
+      │  enqueue update
+      ▼
+   Redis Queue
+      │
+      │  BRPOP (background worker)
+      ▼
+Background Worker — merge + batch
+      │
+      ▼
+PostgreSQL — single CRDT snapshot
+```
+
+The core idea is simple:
+
+> **Real-time collaboration is completely decoupled from database writes.**
+
+Every keystroke flows through memory and Redis first. The database only sees clean, batched snapshots — not a flood of individual updates. This keeps latency low and the system scalable.
+
+---
+
+### The Full Sync Pipeline
+
+```
+You type
+  → Local Yjs doc updates instantly       (optimistic UI)
+  → CRDT update sent over WebSocket
+  → Server updates its in-memory doc
+  → Update broadcast to all other clients
+  → Update pushed into Redis queue
+  → Worker picks it up, merges it
+  → Single snapshot written to PostgreSQL
+```
+
+**Why Redis in the middle?**
+Rather than writing every update to the DB (which would be thousands of writes per session), Redis acts as a **durability buffer**. The worker drains the queue, merges everything into one CRDT snapshot, and does a single write. Dramatically less load on the database.
+
+---
+
+## ◈ Core Features
+
+### 🤝 Real-Time Collaborative Editing
+
+Built on **Yjs**, a battle-tested CRDT library. Multiple people can type at the same time, go offline, come back — and everything converges to the same correct state. No server-side conflict resolution needed.
+
+---
+
+### 🟢 Live Presence & Cursors
+
+Every open tab gets a unique session (`userId + tabId`). You can see exactly where collaborators are in the document, in real time.
+
+---
+
+### 🧱 Block-Based Document Model
+
+Pages are made of blocks — text, headings, to-dos, code snippets, images. Each block is an independent entity, making inserts, updates, and reordering efficient and clean.
+
+---
+
+### 🏢 Multi-Tenant Workspaces
+
+Each workspace is fully isolated. Roles (Admin / Editor / Viewer) are enforced at the API layer, not just the frontend.
+
+---
+
+### 🌳 Hierarchical Pages
+
+```
+Workspace
+ └── Page
+      └── Subpage
+           └── Subpage
+```
+
+---
+
+### ⚡ Optimistic UI
+
+Edits appear instantly on your screen. If something fails, the UI reconciles automatically — no janky rollbacks, no lost work.
+
+---
+
+## ◈ WebSocket Reliability
+
+WebSockets can be flaky. Zotion handles this gracefully:
+
+- **Heartbeat (ping/pong)** — keeps connections alive
+- **Exponential backoff** — auto-reconnects without hammering the server
+- **Offline buffering** — queues updates locally while disconnected (bounded size)
+- **Memory cleanup** — properly tears down state on disconnect
+
+---
+
+## ◈ Database Design
+
+### Blocks — stored as separate rows
+Avoids the problem of giant nested JSON blobs. Partial updates are efficient.
+
+### CRDT State — stored as a binary snapshot
+```sql
+yjsState  BYTEA
+```
+Each page stores one complete snapshot. The worker always merges before writing, so the DB stays clean.
+
+### Auth — JWT + refresh token rotation
+- Multiple active sessions supported
+- Selective logout per session
+- Token invalidation on suspicious activity
+
+---
+
+## ◈ Tech Stack
+
+| Layer | Tech |
+|---|---|
+| Backend | Node.js, Express, Prisma |
 | Database | PostgreSQL (Neon) |
 | Real-time | Yjs (CRDT), WebSockets (`ws`) |
 | Queue | Redis |
 | Frontend | Next.js, React, TypeScript |
 | Auth | JWT + Refresh Token Rotation |
-| Infra | Vercel (frontend), Render (backend) |
-
-
-## Architecture
-
-```
-Browser Client (Yjs Doc)
-        │
-        │  WebSocket — CRDT updates
-        ▼
-WebSocket Server (In-Memory Y.Doc)
-        │
-        │  enqueue update
-        ▼
-      Redis
-   Update Queue
-        │
-        │  BRPOP
-        ▼
- Background Worker
-  Merge + Persist
-        │
-        ▼
-   PostgreSQL
-  yjsState blob
-```
-
-The real-time editing path is **fully decoupled from database writes**.
-
-Updates flow: `Client → WebSocket → Server Memory → Redis → Worker → PostgreSQL`
-
-This keeps latency low, writes batched, and the database load minimal.
-
-
-<img width="276" height="459" alt="Screenshot 2026-02-26 at 11 05 06" src="https://github.com/user-attachments/assets/2fa0c8ff-7c79-48d2-890b-21a5fe25c153" />
-<img width="607" height="261" alt="Screenshot 2026-02-26 at 10 48 49" src="https://github.com/user-attachments/assets/18566813-ea94-4a26-9900-57d9c1d67c8a" />
+| Infra | Vercel, Render |
 
 ---
 
-## Features
-
-### Multi-Tenant Workspaces
-Each workspace is fully isolated. Roles — **Admin**, **Editor**, **Viewer** — are enforced at the API layer.
-
-### Block-Based Content Model
-Pages are composed of typed, ordered blocks: paragraphs, headings, code blocks, todos, and images. Each block is an independent entity with a type, position, and JSON content payload — making insertion, deletion, and reordering straightforward.
-
-### Real-Time Collaborative Editing
-Built on **Yjs CRDTs**. Multiple users can edit simultaneously, updates can arrive out of order, and all clients converge to the same state — no server-side merge logic required.
-
-### Live Cursors and Presence
-Each browser tab gets its own cursor identity via `userId + tabId`, so collaborators can see exactly where others are typing.
-
-### Hierarchical Pages
-Pages support nested parent-child relationships via a self-referencing foreign key:
-```
-Workspace
-└── Page
-    └── Subpage
-        └── Subpage
-```
-
-<img width="1466" height="827" alt="Screenshot 2026-02-26 at 10 55 29" src="https://github.com/user-attachments/assets/8c1132c2-e530-4be0-842b-d61f05c19779" />
-
-<img width="1470" height="796" alt="Screenshot 2026-02-26 at 10 54 18" src="https://github.com/user-attachments/assets/dd8a325c-babf-4fb3-8fb5-82f2b5a65c87" />
-
-
-### Optimistic UI
-Client edits are applied instantly. If the server rejects an update, the UI reconciles automatically — keeping the editing experience fast and responsive.
-
----
-
-## How Real-Time Sync Works
-
-```
-Keystroke
-  → Client Yjs Doc (apply locally)
-  → Send CRDT update via WebSocket
-  → Server applies update to in-memory Y.Doc
-  → Broadcast to other clients
-  → Push to Redis queue
-  → Worker merges updates
-  → Persist full Yjs snapshot to PostgreSQL
-```
-
-Redis acts as the **durability buffer**. Instead of hitting the database on every keystroke, updates are queued, merged, and written as a single CRDT snapshot. This dramatically reduces write amplification.
-
----
-
-## WebSocket Reliability
-
-- **Heartbeats** — ping/pong every 30 seconds to keep idle connections alive
-- **Auto-reconnect** — exponential backoff on disconnect
-- **Offline queue** — updates buffered locally and flushed on reconnect (capped to prevent memory growth)
-- **Memory lifecycle** — server-side `Y.Doc` is destroyed when the last user leaves a page
-
----
-
-## Database Design
-
-**Blocks as separate entities** — not embedded in pages. Each block is its own row, making reordering and updates efficient.
-
-**Yjs state storage** — each page stores a `yjsState: Bytes` blob containing the full CRDT snapshot. The worker always merges before writing, so the database always holds a complete, replayable document state.
-
-**Refresh token keystore** — tokens are stored independently per session under each user, enabling selective logout and multiple active sessions.
-
----
-
-## Running Locally
+## ◈ Run Locally
 
 ```bash
-# Clone
 git clone https://github.com/yourusername/zotion
 cd zotion
 
-# Install
+cd backend
 npm install
-
-# Start backend
 npm run dev
 
-# Start frontend
+# In another terminal
 cd frontend
 npm run dev
 ```
 
 ---
 
-## Why Build This?
+## ◈ Why I Built This
 
-**MVP complete — actively iterating.** The core workspace, collaboration, and content editing experience is functional and deployed. Focus now is on polish and consistency before the next round of features.
+Most tutorials show you how to use real-time services. This project is about understanding what those services are actually doing:
 
+- How do CRDTs eliminate merge conflicts?
+- How do you keep latency low when persistence is slow?
+- How do you separate the user experience layer from the storage layer?
+- How do WebSockets behave at scale, and how do you make them reliable?
+
+Zotion is the answer to all of those questions, in working code.
+
+---
+
+## ◈ Status
+
+| | |
+|---|---|
+| ✅ | Core system complete |
+| ✅ | Real-time collaboration working |
+| 🔄 | Performance tuning + UX polish in progress |
